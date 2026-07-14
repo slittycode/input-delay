@@ -1,0 +1,38 @@
+diff --git a/inputLagTimer.py b/inputLagTimer.py
+index ee948a5..d790e61 100644
+--- a/inputLagTimer.py
++++ b/inputLagTimer.py
+@@ -782,6 +782,33 @@ def main(webcamNextRequested):
+     if breakRequested:
+       break
+ 
++  # --- LOCAL ADDITION (input-delay project): dump measured latencies to a JSON sidecar ---
++  # The upstream tool only shows stats on-screen and saves a .cfg. We also write
++  # <video>.result.json so aggregate_latency.py can pool multiple clips into a
++  # median + spread. Only for file inputs (not live webcam, where videopath is an int).
++  try:
++    if type(videopath) is not int:
++      _secs = [l.secs() for l in latencies]
++      if _secs:
++        import statistics as _st
++        _result = {
++          "video": str(videopath),
++          "count": len(_secs),
++          "latencies_ms": [round(s * 1000, 1) for s in _secs],
++          "median_ms": round(_st.median(_secs) * 1000, 1),
++          "mean_ms": round(_st.mean(_secs) * 1000, 1),
++          "stdev_ms": round(_st.pstdev(_secs) * 1000, 1) if len(_secs) > 1 else 0.0,
++          "min_ms": round(min(_secs) * 1000, 1),
++          "max_ms": round(max(_secs) * 1000, 1),
++        }
++        with open("{}.result.json".format(videopath), "w") as _f:
++          json.dump(_result, _f, indent=2)
++        print("[input-delay] wrote {}.result.json ({} measurements, median {} ms)".format(
++          videopath, len(_secs), _result["median_ms"]))
++  except Exception as _e:
++    print("[input-delay] could not write result json:", _e)
++  # --- end local addition ---
++
+   cap.release()
+   cv.destroyAllWindows()
+   return retry, webcamNextRequested

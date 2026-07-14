@@ -1,0 +1,21 @@
+{
+  "tool": "browser-gamepad-api",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.20186.9 Chrome/148.0.7778.271 Electron/42.5.1 Safari/537.36",
+  "controller": "Controller (STANDARD GAMEPAD)",
+  "mapping": "standard",
+  "buttons": 18,
+  "axes": 4,
+  "duration_s": 15.03,
+  "reports_captured": 1258,
+  "sampler_loop_hz": 337207,
+  "polling_rate_hz": 109.9,
+  "interval_ms": {
+    "min": 4,
+    "median": 9.1,
+    "avg": 9.866,
+    "max": 423.2,
+    "jitter_std": 16.873
+  },
+  "caveat": "polling_rate_hz is a lower bound if it approaches sampler_loop_hz",
+  "_analysis_note": "Connection: Xbox Series X/S controller, USB via USB2 dock. Captured in the in-app Claude Browser (Electron/Chromium 148) via the W3C Gamepad API, which is backed by Apple's GameController framework on macOS. Main display 144Hz (6.94ms), built-in ProMotion 120Hz (8.33ms); median interval 9.1ms exceeds both frame times, so the rate is NOT display-refresh-capped. sampler_loop_hz 337207 >> polling_rate_hz 109.9, so NOT loop-capped either. The max 423ms and high jitter_std are inflated by moments the stick paused (no new report -> long gap); median 9.1ms is the robust central value. ~110Hz effective is consistent with an Xbox controller's ~125Hz nominal report rate with some GameController delivery overhead."
+}

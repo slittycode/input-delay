@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gamepad Polling-Rate Tester (native macOS via Gamepad API)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 780px; margin: 2rem auto;
+         padding: 0 1rem; line-height: 1.5; }
+  h1 { font-size: 1.35rem; } h2 { font-size: 1.05rem; margin-top: 1.6rem; }
+  .card { border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+          border-radius: 10px; padding: 1rem 1.1rem; margin: 1rem 0; }
+  button { font-size: 1rem; padding: .5rem 1rem; border-radius: 8px; cursor: pointer;
+           border: 1px solid color-mix(in srgb, currentColor 40%, transparent); background: transparent; }
+  button:disabled { opacity: .4; cursor: default; }
+  .big { font-size: 2rem; font-weight: 700; }
+  .muted { opacity: .7; font-size: .9rem; }
+  table { border-collapse: collapse; width: 100%; margin-top: .5rem; }
+  td, th { text-align: left; padding: .3rem .6rem; border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  pre { background: color-mix(in srgb, currentColor 8%, transparent); padding: .8rem; border-radius: 8px;
+        overflow-x: auto; font-size: .82rem; }
+  .status { font-weight: 600; }
+  .go { color: #1a7f37; } .wait { color: #9a6700; }
+</style>
+</head>
+<body>
+<h1>Gamepad Polling-Rate Tester</h1>
+<p class="muted">
+  Native macOS path: the browser's W3C Gamepad API is backed by Apple's GameController
+  framework — the same layer that blocks terminal/SDL tools. This page derives polling
+  rate and report-interval jitter from the deltas between distinct
+  <code>gamepad.timestamp</code> values. Open in <strong>Chrome or Safari</strong>.
+</p>
+
+<div class="card">
+  <div>Detected controller: <span id="name" class="status wait">none — press any button to wake it</span></div>
+  <div class="muted" id="sub"></div>
+</div>
+
+<div class="card">
+  <p><strong>How to run:</strong></p>
+  <ol>
+    <li>Press any button on the controller so the browser exposes it.</li>
+    <li>Click <strong>Start</strong>.</li>
+    <li><strong>Rotate the LEFT stick in continuous circles</strong> at the outer edge for ~15&nbsp;s (keeps a fresh report every poll, like gamepadla).</li>
+    <li>Click <strong>Stop</strong> and read the results. A copyable JSON block appears at the bottom.</li>
+  </ol>
+  <button id="start" disabled>Start</button>
+  <button id="stop" disabled>Stop</button>
+  <button id="download" disabled>Download JSON</button>
+  <span id="elapsed" class="muted"></span>
+</div>
+
+<div class="card">
+  <div class="muted">Live polling rate (from report-interval median)</div>
+  <div class="big"><span id="rate">—</span> Hz</div>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Reports captured</td><td class="num" id="count">0</td></tr>
+    <tr><td>Sampler loop rate</td><td class="num" id="looprate">—</td></tr>
+    <tr><td>Min interval</td><td class="num" id="min">—</td></tr>
+    <tr><td>Median interval</td><td class="num" id="median">—</td></tr>
+    <tr><td>Avg interval</td><td class="num" id="avg">—</td></tr>
+    <tr><td>Max interval</td><td class="num" id="max">—</td></tr>
+    <tr><td>Jitter (std dev)</td><td class="num" id="jitter">—</td></tr>
+  </table>
+</div>
+
+<h2>Result JSON</h2>
+<pre id="json">Run a test to produce results.</pre>
+
+<h2>Important limitation (read this)</h2>
+<p class="muted">
+  Browser gamepad sampling can be bounded by the page's loop rate. This page samples with a
+  tight <code>MessageChannel</code> loop (faster than requestAnimationFrame) and reports the
+  actual sampler rate above. If the sampler rate is well above the measured polling rate, the
+  number is trustworthy. If they are close, the polling rate is a <strong>lower bound</strong>
+  capped by the browser, not the controller's true report rate. Compare against the terminal
+  tools' theoretical max (125/250/500/1000&nbsp;Hz buckets) accordingly.
+</p>
+
+<script>
+let running = false, samples = 0, lastTs = null, intervals = [], loopTicks = 0;
+let tStart = 0, gpIndex = null, chan = null, result = null;
+
+const $ = id => document.getElementById(id);
+
+function fmt(x, d = 2) { return (x === null || isNaN(x)) ? "—" : x.toFixed(d); }
+function median(a) { if (!a.length) return NaN; const s=[...a].sort((x,y)=>x-y); const m=s.length>>1;
+  return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+function std(a) { if (a.length<2) return NaN; const m=a.reduce((p,c)=>p+c,0)/a.length;
+  return Math.sqrt(a.reduce((p,c)=>p+(c-m)**2,0)/(a.length-1)); }
+
+function pickGamepad() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) if (p) return p;
+  return null;
+}
+
+function refreshName() {
+  const p = pickGamepad();
+  if (p) {
+    $("name").textContent = p.id;
+    $("name").className = "status go";
+    $("sub").textContent = `${p.buttons.length} buttons · ${p.axes.length} axes · mapping: ${p.mapping || "(none)"}`;
+    $("start").disabled = running;
+    gpIndex = p.index;
+  }
+}
+window.addEventListener("gamepadconnected", refreshName);
+setInterval(refreshName, 500);
+
+function sampleLoop() {
+  if (!running) return;
+  loopTicks++;
+  const pads = navigator.getGamepads();
+  const p = gpIndex !== null ? pads[gpIndex] : pickGamepad();
+  if (p && p.timestamp !== lastTs) {
+    if (lastTs !== null) {
+      const dt = p.timestamp - lastTs;
+      if (dt > 0 && dt < 500) { intervals.push(dt); samples++; }
+    }
+    lastTs = p.timestamp;
+  }
+  chan.port2.postMessage(0); // schedule next tick ASAP (faster than rAF)
+}
+
+function updateStats() {
+  if (!running) return;
+  const el = (performance.now() - tStart) / 1000;
+  $("elapsed").textContent = `${el.toFixed(1)} s`;
+  $("count").textContent = samples;
+  $("looprate").textContent = `${Math.round(loopTicks / Math.max(el, 0.001))} Hz`;
+  if (intervals.length) {
+    const med = median(intervals), avg = intervals.reduce((a,b)=>a+b,0)/intervals.length;
+    $("min").textContent = fmt(Math.min(...intervals)) + " ms";
+    $("median").textContent = fmt(med) + " ms";
+    $("avg").textContent = fmt(avg) + " ms";
+    $("max").textContent = fmt(Math.max(...intervals)) + " ms";
+    $("jitter").textContent = fmt(std(intervals)) + " ms";
+    $("rate").textContent = fmt(1000 / med, 1);
+  }
+  requestAnimationFrame(updateStats);
+}
+
+$("start").onclick = () => {
+  const p = pickGamepad(); if (!p) return;
+  running = true; samples = 0; lastTs = null; intervals = []; loopTicks = 0;
+  tStart = performance.now();
+  chan = new MessageChannel();
+  chan.port1.onmessage = sampleLoop;
+  $("start").disabled = true; $("stop").disabled = false; $("download").disabled = true;
+  chan.port2.postMessage(0);
+  requestAnimationFrame(updateStats);
+};
+
+$("stop").onclick = () => {
+  running = false;
+  $("start").disabled = false; $("stop").disabled = true;
+  const el = (performance.now() - tStart) / 1000;
+  const p = pickGamepad();
+  const med = median(intervals), avg = intervals.reduce((a,b)=>a+b,0)/(intervals.length||1);
+  result = {
+    tool: "browser-gamepad-api",
+    userAgent: navigator.userAgent,
+    controller: p ? p.id : "(lost)",
+    mapping: p ? p.mapping : null,
+    buttons: p ? p.buttons.length : null,
+    axes: p ? p.axes.length : null,
+    duration_s: +el.toFixed(2),
+    reports_captured: samples,
+    sampler_loop_hz: Math.round(loopTicks / Math.max(el, 0.001)),
+    polling_rate_hz: intervals.length ? +(1000 / med).toFixed(1) : null,
+    interval_ms: intervals.length ? {
+      min: +Math.min(...intervals).toFixed(3),
+      median: +med.toFixed(3),
+      avg: +avg.toFixed(3),
+      max: +Math.max(...intervals).toFixed(3),
+      jitter_std: +std(intervals).toFixed(3),
+    } : null,
+    caveat: "polling_rate_hz is a lower bound if it approaches sampler_loop_hz",
+  };
+  $("json").textContent = JSON.stringify(result, null, 2);
+  $("download").disabled = false;
+};
+
+$("download").onclick = () => {
+  if (!result) return;
+  const blob = new Blob([JSON.stringify(result, null, 2)], {type: "application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "gamepad-result.json";
+  a.click();
+};
+</script>
+</body>
+</html>

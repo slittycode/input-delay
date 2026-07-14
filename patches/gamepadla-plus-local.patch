@@ -1,0 +1,13 @@
+diff --git a/gamepadla_plus/cli.py b/gamepadla_plus/cli.py
+index 1c3dc4f..5ce934e 100644
+--- a/gamepadla_plus/cli.py
++++ b/gamepadla_plus/cli.py
+@@ -99,7 +99,7 @@ def test(
+ | Operating System    | {result["os_name"]}                     |
+ | Polling Rate Max.   | {result["max_polling_rate"]} Hz         |
+ | Polling Rate Avg.   | {result["polling_rate"]} Hz             |
+-| Stability           | {result["stablility"]}%                 |
++| Stability           | {result["stability"]}%                 |
+ |                     |                               |
+ | Minimal latency     | {result["filteredMin"]} ms              |
+ | Average latency     | {result["filteredAverage_rounded"]} ms  |

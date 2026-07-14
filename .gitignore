@@ -1,0 +1,21 @@
+# build artifacts (reproducible from sources via the build scripts)
+.build/
+*.exe
+*.dll
+*.o
+cross-over/hidprobe
+cross-over/polling-exe/
+gcprobe/gcprobe
+gcprobe/hidmon
+gcprobe/battery-*/
+
+# vendored upstream clones (own .git; local changes captured in patches/)
+inputLagTimer/
+gamepadla-plus/
+
+# private session notes / OS noise
+.remember/
+.DS_Store
+
+# bulky raw logs (findings are summarized in logs-findings.md)
+logs/

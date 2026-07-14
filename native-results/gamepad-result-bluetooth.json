@@ -1,0 +1,20 @@
+{
+  "tool": "browser-gamepad-api",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.20186.9 Chrome/148.0.7778.271 Electron/42.5.1 Safari/537.36",
+  "controller": "Xbox Wireless Controller (STANDARD GAMEPAD)",
+  "mapping": "standard",
+  "buttons": 18,
+  "axes": 4,
+  "duration_s": 19.32,
+  "reports_captured": 1025,
+  "sampler_loop_hz": 227956,
+  "polling_rate_hz": 67.6,
+  "interval_ms": {
+    "min": 5,
+    "median": 14.8,
+    "avg": 18.671,
+    "max": 90.1,
+    "jitter_std": 7.981
+  },
+  "caveat": "polling_rate_hz is a lower bound if it approaches sampler_loop_hz"
+}

@@ -1,0 +1,8 @@
+{
+  "tool": "crossover-inbottle-xinput-gui",
+  "slot": 0,
+  "polls": 11837,
+  "packet_changes": 0,
+  "polling_rate_hz": null,
+  "verdict": "connected but ZERO input even as foreground window"
+}

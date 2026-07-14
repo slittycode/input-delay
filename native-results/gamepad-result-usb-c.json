@@ -1,0 +1,20 @@
+{
+  "tool": "browser-gamepad-api",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.20186.9 Chrome/148.0.7778.271 Electron/42.5.1 Safari/537.36",
+  "controller": "Controller (STANDARD GAMEPAD)",
+  "mapping": "standard",
+  "buttons": 18,
+  "axes": 4,
+  "duration_s": 9.77,
+  "reports_captured": 1120,
+  "sampler_loop_hz": 222500,
+  "polling_rate_hz": 109.9,
+  "interval_ms": {
+    "min": 4,
+    "median": 9.1,
+    "avg": 8.455,
+    "max": 120.4,
+    "jitter_std": 5.944
+  },
+  "caveat": "polling_rate_hz is a lower bound if it approaches sampler_loop_hz"
+}
