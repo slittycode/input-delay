@@ -32,7 +32,8 @@ lagtrack/              LIVE tracker (Swift): FPS/frametimes/1% low + KB/M + cont
 latbudget/             Per-stage latency BUDGET monitor: host HID cadence (kernel report
                        timestamps) + in-bottle XInput proxy DLL (UDP + clock sync) +
                        present stage. Never prints one number; unmeasured gaps stated.
-                       1 kHz self-test. See latbudget/README.md.
+                       1 kHz self-test. Pipeline verified; NO real-game budget captured
+                       yet ([C]/[D] have no play-session samples). latbudget/README.md.
 gamepadla-plus/        Category-1 tool (Python/pygame). Enumerates + synthetic polling test.
 webtester/gamepad.html Category-1, the path that WORKS on this Mac: browser Gamepad API.
 native-results/        Real Category-1 captures (Bluetooth / USB-C / USB-A).
@@ -49,26 +50,27 @@ NOTES.md               Chronological log of everything tried, incl. failures + r
 
 ## Key finding first: how controller input actually works on this Mac
 
-Apple's **GameController framework** owns modern controllers. On this machine the Xbox
-Series X/S pad is claimed by `XboxGamepad.dext` at the IOKit level (wired *or* Bluetooth),
-and macOS delivers its **input only to the frontmost application**. Consequences, all proven
-empirically (see [NOTES.md](NOTES.md)):
+`XboxGamepad.dext` claims the pad's raw USB/BT interface at the IOKit level, wired or
+wireless, and re-exposes it through exactly **two doors with two different rules**. Earlier
+write-ups here conflated them; corrected 2026-07-15, every claim below from a real run
+(see [NOTES.md](NOTES.md)):
 
-- Raw-HID tools (SDL/pygame from a terminal, a raw `IOHIDManager` client) **enumerate the pad
-  but receive zero input** — they aren't the frontmost app.
-- The **browser works** because it's a frontmost GUI app on the GameController path — that's
-  why the Category-1 measurement here uses the browser Gamepad API.
-- **CrossOver games work** for the same reason (the game window is frontmost); a *windowless*
-  Wine probe gets nothing, a *windowed* one gets full input.
+1. **GameController-framework path** (browsers, SDL/pygame's MFi backend, native
+   `GCController` clients, Wine's input feed). Delivery is **frontmost-only by default**.
+   Proven: browser frontmost → ~110 Hz; SDL/pygame from a terminal → enumerates, **0
+   events**; windowless Wine probe → 0 packets, windowed+focused → full input. Apple ships
+   one exception: a native client that sets
+   `GCController.shouldMonitorBackgroundEvents = true` received **37/37 stick events while
+   backgrounded** (`gcprobe/`).
+2. **Raw `IOHIDManager` path**. **Not frontmost-limited at all** — it is gated by the
+   **Input Monitoring permission** (TCC). The early "opens the device, zero reports" result
+   came from a process *without* that permission; re-run 2026-07-15 with it granted, a
+   backgrounded IOHIDManager client received **110/110 reports** (`gcprobe/hidmon.swift`).
+   lagtrack's live controller tap is built on this.
 
-This single fact explains almost every "the controller doesn't show up" symptom on modern macOS.
-
-> **2026-07-15 correction (proven, see NOTES.md):** frontmost-only holds for *default*
-> delivery, but background **observation** works two ways: (1) a native client setting
-> `GCController.shouldMonitorBackgroundEvents = true` received 37/37 stick events while
-> backgrounded; (2) raw IOHIDManager received 110/110 reports while backgrounded once the
-> process had **Input Monitoring** permission — the original "zero reports" was a
-> permission artifact, not a driver seize. lagtrack uses this for a live controller tap.
+So "the tool sees no input" has two different cures, and you must know which path the tool
+uses: GameController-path tools need to be **frontmost** (or set the background-events
+flag); raw-HID tools need **Input Monitoring granted**.
 
 ## Reproduce Category 1 — polling / report interval
 
@@ -92,25 +94,34 @@ Measured on this Mac (Xbox Series X/S), from [native-results/](native-results/):
 and raises jitter. USB-C and USB-A are equivalent.
 
 **gamepadla-plus** (also Category 1) builds and enumerates here (`uv run gamepadla list`) but
-its live test needs raw SDL input, which the GameController claim blocks from a terminal — so
-the browser tester is the working substitute on this Mac. Details in [NOTES.md](NOTES.md).
+its live test reads the pad through SDL's GameController (MFi) backend — **mechanism 1
+above, frontmost-only** — and a terminal process is never frontmost, so it gets zero events.
+This is *not* the raw-HID permission issue. (SDL's hidapi backend was also tried and could
+not open the dext-claimed device; whether Input Monitoring changes that is untested.) The
+browser tester is the working substitute on this Mac. Details in [NOTES.md](NOTES.md).
 
 **CrossOver in-bottle** (Category 1, "what the game sees through Wine"): run
 `cross-over/run-gui-probe.sh` from a real terminal, focus the window, rotate the stick.
-Result: **172 Hz live** — CrossOver adds no polling-rate penalty. See
-[comparison-table.md](comparison-table.md) for why native (~109 Hz, browser-capped) and
-in-bottle (172 Hz, XInput packets) can't be subtracted for a clean overhead number.
+Result: **172 Hz live** — CrossOver adds no polling-rate penalty.
+
+Why 172 > 109 when Wine cannot manufacture reports the hardware never sent: the two
+counters bracket the truth from opposite sides. The native 109 is **Chromium-capped** (an
+*undercount* of the true USB report rate), while `dwPacketNumber` increments on every
+XInput state transition winebus applies, which need not be 1:1 with hardware reports (one
+HID report can land as more than one state update — an *overcount* relative to raw
+reports). Neither number is the raw hardware rate, which is why they measure different
+things and [comparison-table.md](comparison-table.md) refuses to subtract them.
 
 ## Live tracking while you play — lagtrack
 
 For a while-you-play view (not a lab measurement): `lagtrack/` attaches to the game
-window from outside the bottle and logs per-second FPS, frametime percentiles, a
-keyboard/mouse **input→next-present** latency proxy, and the game process's CPU/RAM,
-with a session summary (avg FPS, 1% low, latency p50/p95) on Ctrl-C. Verified against a
-live in-bottle Wine window. It cannot see controller events (frontmost-only delivery,
-see the key finding above) — tap a bound keyboard key occasionally for latency samples,
-or use Category 2 below for the true controller number. Details and honest caveats:
-[lagtrack/README.md](lagtrack/README.md).
+window from outside the bottle and logs per-second FPS, frametime percentiles, an
+**input→next-present** latency proxy from keyboard/mouse *and* controller button presses
+(raw IOHID with Input Monitoring — mechanism 2 in the key finding), and the game
+process's CPU/RAM, with a session summary (avg FPS, 1% low, latency p50/p95) on Ctrl-C.
+Verified against a live in-bottle Wine window; a real-game controller-latency session has
+not been run yet. For the true button-to-photon number use Category 2 below. Details and
+honest caveats: [lagtrack/README.md](lagtrack/README.md).
 
 ## Reproduce Category 2 — button-to-photon
 
@@ -127,10 +138,12 @@ Full instructions in [stage2-workflow.md](stage2-workflow.md). Short version:
 
 1. **Bluetooth vs USB.** Measured here: BT ≈ 68 Hz vs USB ≈ 109 Hz, with worse jitter. Always
    note the transport; never compare across it.
-2. **GameController framework vs translation layers.** Native macOS games and browsers read
-   controllers via GameController (frontmost-only input). SDL/pygame/raw-HID and Wine's
-   background bus do *not* get input unless a window is frontmost. If a tool "sees no input,"
-   suspect this before the hardware.
+2. **Two access paths, two different failure modes.** GameController-path tools (browsers,
+   SDL/pygame MFi, Wine's feed) are frontmost-only unless the client sets
+   `shouldMonitorBackgroundEvents`. Raw `IOHIDManager` tools are instead gated by the
+   **Input Monitoring permission** — no focus requirement once granted. If a tool "sees no
+   input," first identify which path it uses, then apply the matching fix (focus vs
+   permission) — and suspect both before the hardware.
 3. **ProMotion / display refresh.** A 120/144 Hz display both caps how fast a browser-based
    poll can *observe* reports and changes the display's own latency contribution. Record the
    refresh rate; a median report interval *below* the frame time is a red flag for

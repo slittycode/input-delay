@@ -7,10 +7,18 @@ refuses to pretend otherwise. Stages are never summed.
 ```
 [A] in-controller scan + radio ......... UNMEASURED (hardware; context bounds stated)
 [B] host HID report cadence ............ MEASURED  median / p99 / jitter σ / idle gaps
-[C] host HID → XInput packet at poll ... MEASURED  (in-bottle proxy DLL + clock sync)
-[D] game-observed packet → present ..... MEASURED  (lower bound; pipelining unmeasured)
+[C] host HID → XInput packet at poll ... MEASURABLE (in-bottle proxy DLL + clock sync)
+[D] game-observed packet → present ..... MEASURABLE (lower bound; pipelining unmeasured)
 [E] present → photon ................... UNMEASURED (≤ 1 refresh + panel response)
 ```
+
+> **Status (2026-07-15): no real-game budget has been captured yet.** Every link is
+> individually verified — self-test PASS at 1 kHz, the proxy loads/forwards/timestamps
+> inside a real bottle and its packets reach the collector with sub-ms clock sync, and
+> stage B measured live at ~66 Hz over BT LE — but **[C] and [D] have zero samples from
+> an actual play session**. "Works end to end" is the strongest claim this tool has
+> earned so far; the first real run (install the proxy for a game, play, Ctrl-C) replaces
+> this note with numbers.
 
 ## Hard-constraint compliance
 

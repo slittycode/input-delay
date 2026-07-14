@@ -22,13 +22,22 @@ The in-bottle rate (172 Hz) is *higher* than the native browser rate (109 Hz). C
 1. **Native** uses the browser Gamepad API, whose `gamepad.timestamp` updates at Chromium's
    **capped internal gamepad cadence** (~110 Hz). It almost certainly **under-counts** the
    controller's true report rate.
-2. **In-bottle** counts XInput `dwPacketNumber` increments, which winebus bumps per HID
-   report — surfacing updates the browser API hides.
+2. **In-bottle** counts XInput `dwPacketNumber` increments — every state transition winebus
+   applies. That need **not** be 1:1 with hardware reports (one HID report can land as more
+   than one state update), so it can **over-count** relative to raw reports. Wine cannot
+   manufacture reports the hardware never sent; it can only slice them differently. The two
+   counters bracket the truth from opposite sides — that is why 172 > 109 is not a paradox.
 
-So a `bottle − native` subtraction would be measuring the browser's cap, not CrossOver's
-overhead. A true native reference (raw HID report rate, same method as XInput) is **not
-obtainable on this Mac**: `gamecontrollerd` blocks raw-HID access natively (proven by
-`hidprobe`: OPEN_OK + 0 reports), and XInput is Windows-only.
+So a `bottle − native` subtraction would be measuring the browser's cap plus winebus's
+slicing, not CrossOver's overhead.
+
+> **2026-07-15 update:** the original claim here — that a true native raw-report reference
+> is "not obtainable" because `hidprobe` got OPEN_OK + 0 reports — was a **permission
+> artifact**: with Input Monitoring granted, a raw IOHIDManager client receives reports
+> fine, even backgrounded (see NOTES.md). `latbudget`'s stage B now provides exactly that
+> reference (kernel-timestamped raw report cadence). A clean same-clock comparison of raw
+> HID rate vs in-bottle XInput rate is therefore now *possible* — it just hasn't been run
+> with active stick movement yet.
 
 ## What we CAN conclude (honestly)
 
