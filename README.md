@@ -148,9 +148,11 @@ Full instructions in [stage2-workflow.md](stage2-workflow.md). Short version:
    poll can *observe* reports and changes the display's own latency contribution. Record the
    refresh rate; a median report interval *below* the frame time is a red flag for
    refresh-capping.
-4. **Backgrounded-app throttling.** macOS throttles background apps; controller input also
-   only flows to the foreground. Keep the game/tool frontmost during any measurement, or
-   latency and polling both look artificially bad.
+4. **Backgrounded-app throttling.** macOS throttles background apps, and
+   GameController-path input (which feeds the game itself — mechanism 1) only flows to the
+   foreground. Keep the *game* frontmost during any measurement or latency and polling both
+   look artificially bad; observation tools using raw HID (mechanism 2) may run in the
+   background just fine.
 5. **Rolling shutter & output position (Category 2).** Phone cameras and displays both scan
    top-to-bottom; camera skew and where on the screen you measure can each shift the number by
    up to a frame. Keep them consistent across clips.
