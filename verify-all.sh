@@ -122,8 +122,12 @@ for i in range(c):
         pass "pygame enumerates the controller."
     else
         echo "  $ENUM_OUTPUT" | sed 's/^/  /'
-        fail "pygame found 0 controllers. Controller enumerated as 'Xbox Series X Controller'"
-        fail "  but SDL/pygame can't access it — known Stage 1 blocker."
+        fail "pygame found 0 controllers. Expected on this Mac: SDL/pygame reads the pad via"
+        fail "  the GameController (MFi) path, which is frontmost-only — a terminal process"
+        fail "  never qualifies. This does NOT mean the pad is unreachable (2026-07-15"
+        fail "  correction, NOTES.md): raw IOHID delivers in the background with Input"
+        fail "  Monitoring granted, and GCController does with shouldMonitorBackgroundEvents."
+        fail "  Working background probes: gcprobe/gcprobe.swift and gcprobe/hidmon.swift."
         fail "  The games are: (a) macOS GameController framework claims the device exclusively,"
         fail "  or (b) this terminal context doesn't receive input events."
     fi
@@ -138,9 +142,21 @@ for i in range(c):
     echo "$LIVE_OUTPUT" | tail -3 | sed 's/^/    /'
     echo ""
 
-    AXIS_SUM=$(echo "$LIVE_OUTPUT" | grep "TOTAL" | grep -oP 'axis-changes=\[\K[^\]]+' |
-               tr ',' '+' | bc 2>/dev/null || echo "0")
-    BTN_SUM=$(echo "$LIVE_OUTPUT" | grep "TOTAL" | grep -oP 'button-events=\K\d+' || echo "0")
+    # POSIX sed, not grep -oP: macOS ships BSD grep without -P, and an || fallback
+    # would silently turn that failure into "0 changes" (a fake Stage 1 failure).
+    TOTAL_LINE=$(echo "$LIVE_OUTPUT" | grep "TOTAL" | head -1 || true)
+    AXIS_LIST=$(echo "$TOTAL_LINE" | sed -n 's/.*axis-changes=\[\([^]]*\)\].*/\1/p')
+    BTN_SUM=$(echo "$TOTAL_LINE" | sed -n 's/.*button-events=\([0-9][0-9]*\).*/\1/p')
+    AXIS_SUM=0
+    if [[ -n "$AXIS_LIST" ]]; then
+        AXIS_SUM=$(echo "$AXIS_LIST" | tr ',' '+' | bc 2>/dev/null || echo 0)
+    fi
+    BTN_SUM=${BTN_SUM:-0}
+    if [[ -n "$TOTAL_LINE" && -z "$AXIS_LIST" ]]; then
+        echo "  WARNING: found a TOTAL line but could not parse axis-changes from it —"
+        echo "  treat the numbers below as a parser problem, not a controller result:"
+        echo "    $TOTAL_LINE"
+    fi
 
     if [[ "$AXIS_SUM" -gt 10 ]] || [[ "$BTN_SUM" -gt 0 ]]; then
         pass "LIVE input detected: $AXIS_SUM axis changes, $BTN_SUM button events"
@@ -148,8 +164,10 @@ for i in range(c):
         echo "  Only $AXIS_SUM axis changes — may be drift/noise. Try moving more aggressively."
         pass "Some input detected ($AXIS_SUM axis changes)"
     else
-        fail "Zero input changes in 6 seconds. Stage 1 blocker confirmed."
-        fail "  See NOTES.md for root cause analysis."
+        fail "Zero input changes in 6 seconds — expected for terminal SDL/pygame (frontmost-"
+        fail "  only GameController path), NOT a hardware fault and NOT the whole story:"
+        fail "  background observation works via raw IOHID + Input Monitoring (gcprobe/hidmon)"
+        fail "  or GCController.shouldMonitorBackgroundEvents (gcprobe). See NOTES.md 2026-07-15."
     fi
 fi >> "$RESULT_FILE"
 

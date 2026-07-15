@@ -47,6 +47,49 @@ swift build -c release
 
 Permissions: Input Monitoring (stage B) and Screen Recording (stage D) for your terminal.
 
+## Polling-rate mode (`--pollrate`)
+
+Measures raw controller polling rate via `IOHIDManager` with kernel-timestamped
+report callbacks — no SDL, no GameController framework, no frontmost requirement.
+This is the "raw native reference" column in `comparison-table.md`: mechanism 2
+(raw IOHID with Input Monitoring), uncapped and delivers in the background.
+
+```bash
+./.build/release/latbudget --pollrate                     # 15 s, JSON to stdout
+./.build/release/latbudget --pollrate --out result.json   # write JSON to file
+./.build/release/latbudget --pollrate --duration 30        # 30-second measurement
+```
+
+Rotate the left stick in continuous circles during the measurement window.
+Ctrl-C also ends early and prints what has been collected.
+
+**Output** (pretty-printed JSON):
+
+```json
+{
+  "controller": "Xbox Series X Controller",
+  "duration_s": 15,
+  "interval_ms": {
+    "avg": 4.012,
+    "jitter_std": 0.847,
+    "max": 8.314,
+    "median": 3.985,
+    "min": 2.747
+  },
+  "intervals_captured": 3741,
+  "polling_rate_hz": 251.0,
+  "reports_captured": 3742,
+  "tool": "latbudget-hid-poll"
+}
+```
+
+Intervals > 200 ms (stick was still) are excluded from stats. A 3-second
+liveness check exits with an error if no controller is detected.
+
+**No real-game budget has been captured yet** (this mode is distinct from the
+stage B/C/D budget pipeline). The output format may gain additional fields as
+the comparison-table workflow evolves.
+
 ## Stage 1 — host HID (stage B)
 
 Raw input **reports** per device (not per-element values). Median, p99, and **jitter

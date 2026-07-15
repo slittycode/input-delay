@@ -57,7 +57,7 @@ final class HIDStage {
             device, dev.buffer, dev.bufferSize, hidStageReport,
             Unmanaged.passUnretained(self).toOpaque()
         )
-        print("latbudget: [B] device attached: \(name) (max report \(maxReport) B)")
+        FileHandle.standardError.write(Data("latbudget: [B] device attached: \(name) (max report \(maxReport) B)\n".utf8))
     }
 
     fileprivate func report(senderKey: UInt, timeStampTicks: UInt64) {
