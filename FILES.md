@@ -1,0 +1,76 @@
+# FILES.md — SHA-pinned raw URLs for all tracked files
+
+Each URL pins to commit `ddf46972c408420ceadda48d0b173c2e00c81d4c` — immune to mutable-ref CDN caches.
+
+| File | Raw URL |
+|------|---------|
+| `.gitignore` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/.gitignore |
+| `NOTES.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/NOTES.md |
+| `README.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/README.md |
+| `STATUS.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/STATUS.md |
+| `comparison-table.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/comparison-table.md |
+| `cross-over-output/.gitkeep` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over-output/.gitkeep |
+| `cross-over-output/inbottle-result.json` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over-output/inbottle-result.json |
+| `cross-over/README.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/README.md |
+| `cross-over/hidprobe.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/hidprobe.c |
+| `cross-over/install-polling.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/install-polling.sh |
+| `cross-over/probe_controller.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/probe_controller.c |
+| `cross-over/probe_controller.py` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/probe_controller.py |
+| `cross-over/probe_live.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/probe_live.c |
+| `cross-over/probe_live_gui.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/probe_live_gui.c |
+| `cross-over/run-comparison.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/run-comparison.sh |
+| `cross-over/run-gui-probe.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/run-gui-probe.sh |
+| `cross-over/run-in-bottle.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/run-in-bottle.sh |
+| `cross-over/setup-bottle.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/cross-over/setup-bottle.sh |
+| `gcprobe/gcprobe.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/gcprobe/gcprobe.swift |
+| `gcprobe/hidmon.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/gcprobe/hidmon.swift |
+| `gcprobe/run-battery.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/gcprobe/run-battery.sh |
+| `lagtrack/Package.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Package.swift |
+| `lagtrack/README.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/README.md |
+| `lagtrack/Sources/lagtrack/Capture.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Sources/lagtrack/Capture.swift |
+| `lagtrack/Sources/lagtrack/ControllerTap.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Sources/lagtrack/ControllerTap.swift |
+| `lagtrack/Sources/lagtrack/InputTap.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Sources/lagtrack/InputTap.swift |
+| `lagtrack/Sources/lagtrack/Overlay.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Sources/lagtrack/Overlay.swift |
+| `lagtrack/Sources/lagtrack/Stats.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Sources/lagtrack/Stats.swift |
+| `lagtrack/Sources/lagtrack/main.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/Sources/lagtrack/main.swift |
+| `lagtrack/monitor.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/monitor.sh |
+| `lagtrack/sessions/20260715-072607.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-072607.csv |
+| `lagtrack/sessions/20260715-072705.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-072705.csv |
+| `lagtrack/sessions/20260715-072824.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-072824.csv |
+| `lagtrack/sessions/20260715-073027.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-073027.csv |
+| `lagtrack/sessions/20260715-074742.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-074742.csv |
+| `lagtrack/sessions/20260715-074807.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-074807.csv |
+| `lagtrack/sessions/20260715-074831.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-074831.csv |
+| `lagtrack/sessions/20260715-094307.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-094307.csv |
+| `lagtrack/sessions/20260715-094654.csv` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/lagtrack/sessions/20260715-094654.csv |
+| `latbudget/Package.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Package.swift |
+| `latbudget/README.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/README.md |
+| `latbudget/Sources/latbudget/BottleLink.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Sources/latbudget/BottleLink.swift |
+| `latbudget/Sources/latbudget/HIDStage.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Sources/latbudget/HIDStage.swift |
+| `latbudget/Sources/latbudget/PresentStage.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Sources/latbudget/PresentStage.swift |
+| `latbudget/Sources/latbudget/SelfTest.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Sources/latbudget/SelfTest.swift |
+| `latbudget/Sources/latbudget/Stats.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Sources/latbudget/Stats.swift |
+| `latbudget/Sources/latbudget/main.swift` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/Sources/latbudget/main.swift |
+| `latbudget/wine/build-proxy.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/wine/build-proxy.sh |
+| `latbudget/wine/diag_xinput.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/wine/diag_xinput.c |
+| `latbudget/wine/install-proxy.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/wine/install-proxy.sh |
+| `latbudget/wine/udp_test.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/wine/udp_test.c |
+| `latbudget/wine/xinput1_4.def` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/wine/xinput1_4.def |
+| `latbudget/wine/xinput_proxy.c` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/latbudget/wine/xinput_proxy.c |
+| `log-analyzer/analyze.py` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/log-analyzer/analyze.py |
+| `log-analyzer/patterns.py` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/log-analyzer/patterns.py |
+| `log-analyzer/wine-debug-channels.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/log-analyzer/wine-debug-channels.md |
+| `logs-findings.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/logs-findings.md |
+| `native-results/gamepad-result-bluetooth.json` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/native-results/gamepad-result-bluetooth.json |
+| `native-results/gamepad-result-usb-a.json` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/native-results/gamepad-result-usb-a.json |
+| `native-results/gamepad-result-usb-c.json` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/native-results/gamepad-result-usb-c.json |
+| `native-results/stage1_browser_result.json` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/native-results/stage1_browser_result.json |
+| `patches/gamepadla-plus-local.patch` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/patches/gamepadla-plus-local.patch |
+| `patches/inputLagTimer-local.patch` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/patches/inputLagTimer-local.patch |
+| `stage1_browser_result.json` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/stage1_browser_result.json |
+| `stage1_selftest.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/stage1_selftest.sh |
+| `stage2-workflow.md` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/stage2-workflow.md |
+| `stage2_aggregate.py` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/stage2_aggregate.py |
+| `stage2_measure.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/stage2_measure.sh |
+| `verify-all.sh` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/verify-all.sh |
+| `webtester/gamepad.html` | https://raw.githubusercontent.com/slittycode/input-delay/ddf46972c408420ceadda48d0b173c2e00c81d4c/webtester/gamepad.html |
