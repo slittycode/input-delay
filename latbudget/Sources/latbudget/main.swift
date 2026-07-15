@@ -14,6 +14,8 @@ USAGE:
   latbudget --port <n>              UDP port for the in-bottle proxy (default 4517)
   latbudget --pollrate [--duration 15] [--out result.json]
                          measure raw controller polling rate via IOHID (no caps)
+  latbudget --pollrate --gui
+                         live dashboard window — any controller, any input
 
 Stage C requires the proxy DLL inside the bottle — see wine/install-proxy.sh.
 Ctrl-C prints the budget.
@@ -24,6 +26,7 @@ struct Options {
     var query: String?
     var port: UInt16 = 4517
     var pollrate = false
+    var gui = false
     var pollDuration = 15
     var pollOut: String? = nil
 }
@@ -39,6 +42,7 @@ func parseArgs(_ args: [String]) -> Options {
             guard i < args.count, let p = UInt16(args[i]) else { fatalError("--port needs a number") }
             o.port = p
         case "--pollrate": o.pollrate = true
+        case "--gui": o.gui = true
         case "--duration":
             i += 1
             guard i < args.count, let d = Int(args[i]), d > 0 else { fatalError("--duration needs a positive number of seconds") }
@@ -259,107 +263,38 @@ final class Monitor {
 }
 
 func runPollrate(_ opts: Options) {
-    let hid = HIDStage()
-    var intervalsMs: [Double] = []
-    var lastNs: UInt64 = 0
-    var reportCount = 0
-    var deviceName = "unknown"
-    let lock = NSLock()
-    var finished = false
+    if opts.gui { runPollrateGUI(opts); return }
 
-    hid.onReport = { ns in
-        lock.lock()
-        reportCount += 1
-        if lastNs != 0, ns > lastNs {
-            let ms = Double(ns - lastNs) / 1e6
-            if ms <= 200 { intervalsMs.append(ms) }
-        }
-        lastNs = ns
-        lock.unlock()
-    }
-
-    guard hid.start() else {
+    let mon = PollrateMonitor()
+    guard mon.start() else {
         fputs("latbudget: IOHIDManagerOpen failed — grant Input Monitoring permission.\n", stderr)
         exit(1)
     }
+    fputs("latbudget: listening (\(opts.pollDuration)s) — use ANY controller input…\n", stderr)
 
-    fputs("latbudget: listening (\(opts.pollDuration)s) — rotate LEFT stick in continuous circles…\n", stderr)
-
+    var finished = false
     let finish: () -> Void = {
         guard !finished else { return }
         finished = true
-
-        lock.lock()
-        let iv = intervalsMs
-        let count = reportCount
-        lock.unlock()
-
-        for (name, _) in hid.summaries() {
-            deviceName = name
-            break
-        }
-
-        let sorted = iv.sorted()
-        let med = percentile(sorted, 0.50)
-        let avg = iv.isEmpty ? 0.0 : iv.reduce(0, +) / Double(iv.count)
-        let minMs = sorted.first ?? 0
-        let maxMs = sorted.last ?? 0
-        let jitter = stddev(iv)
-        let pollingRateHz = med > 0 ? 1000.0 / med : 0
-
-        struct Intervals: Codable {
-            let min: Double
-            let median: Double
-            let avg: Double
-            let max: Double
-            let jitter_std: Double
-        }
-        struct PollResult: Codable {
-            let tool: String
-            let controller: String
-            let duration_s: Double
-            let reports_captured: Int
-            let intervals_captured: Int
-            let polling_rate_hz: Double
-            let interval_ms: Intervals
-        }
-
-        let result = PollResult(
-            tool: "latbudget-hid-poll",
-            controller: deviceName,
-            duration_s: Double(opts.pollDuration),
-            reports_captured: count,
-            intervals_captured: iv.count,
-            polling_rate_hz: (pollingRateHz * 10).rounded() / 10,
-            interval_ms: Intervals(
-                min: (minMs * 1000).rounded() / 1000,
-                median: (med * 1000).rounded() / 1000,
-                avg: (avg * 1000).rounded() / 1000,
-                max: (maxMs * 1000).rounded() / 1000,
-                jitter_std: (jitter * 1000).rounded() / 1000
-            )
-        )
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let jsonData = try? encoder.encode(result),
-              let jsonStr = String(data: jsonData, encoding: .utf8) else {
-            fputs("latbudget: failed to encode result\n", stderr)
-            exit(1)
-        }
-
+        let snap = mon.snapshot()
         if let outPath = opts.pollOut {
-            do {
-                try jsonData.write(to: URL(fileURLWithPath: outPath))
-                fputs("latbudget: wrote result to \(outPath)\n", stderr)
-            } catch {
-                fputs("latbudget: failed to write \(outPath): \(error.localizedDescription)\n", stderr)
-                exit(1)
-            }
+            let intervals = IntervalsJSON(
+                min: round3(snap.minMs), median: round3(snap.medianMs),
+                avg: round3(snap.avgMs), max: round3(snap.maxMs),
+                jitter_std: round3(snap.jitterMs)
+            )
+            let r = PollResult(tool: "latbudget-hid-poll", controller: snap.deviceName,
+                                transport: snap.transport, device_count: snap.deviceCount,
+                               duration_s: round1(snap.elapsedS), reports_captured: snap.reports,
+                               intervals_captured: snap.intervals,
+                               polling_rate_hz: round1(snap.pollingRateHz),
+                               interval_ms: intervals)
+            let e = JSONEncoder(); e.outputFormatting = [.prettyPrinted, .sortedKeys]
+            if let d = try? e.encode(r) { try? d.write(to: URL(fileURLWithPath: outPath)) }
+            fputs("latbudget: wrote result to \(outPath)\n", stderr)
         } else {
-            print(jsonStr)
+            printSnapshotJSON(snap)
         }
-
         exit(0)
     }
 
@@ -369,20 +304,50 @@ func runPollrate(_ opts: Options) {
     sigsrc.resume()
 
     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(3)) {
-        if !finished {
-            lock.lock()
-            let ok = reportCount > 0
-            lock.unlock()
-            if !ok {
-                fputs("latbudget: no controller reports after 3s — is a gamepad connected?\n", stderr)
-                exit(1)
-            }
+        if !finished && mon.snapshot().reports == 0 {
+            fputs("latbudget: no controller reports after 3s — is a gamepad connected?\n", stderr)
+            exit(1)
         }
     }
-
     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(opts.pollDuration), execute: finish)
     RunLoop.main.run()
 }
+
+func runPollrateGUI(_ opts: Options) {
+    let mon = PollrateMonitor()
+    guard mon.start() else {
+        fputs("latbudget: IOHIDManagerOpen failed — grant Input Monitoring permission.\n", stderr)
+        exit(1)
+    }
+    let win = PollrateWindow(monitor: mon)
+    win.show()
+    NSApp.setActivationPolicy(.regular)
+    NSApp.activate(ignoringOtherApps: true)
+    NSApp.run()
+}
+
+struct PollResult: Codable {
+    let tool: String
+    let controller: String
+    let transport: String
+    let device_count: Int
+    let duration_s: Double
+    let reports_captured: Int
+    let intervals_captured: Int
+    let polling_rate_hz: Double
+    let interval_ms: IntervalsJSON
+}
+
+struct IntervalsJSON: Codable {
+    let min: Double
+    let median: Double
+    let avg: Double
+    let max: Double
+    let jitter_std: Double
+}
+
+func round3(_ v: Double) -> Double { (v * 1000).rounded() / 1000 }
+func round1(_ v: Double) -> Double { (v * 10).rounded() / 10 }
 
 setvbuf(stdout, nil, _IONBF, 0) // logs must stream when piped
 // SCContentFilter needs a window-server connection; bare CLIs crash without one.
