@@ -32,6 +32,7 @@ invented — every figure comes from an actual run.**
 | lagtrack ControllerTap — live pad latency | ✅ Built | raw-HID button presses, kernel timestamps; first real-game run pending |
 | latbudget — per-stage budget monitor | ✅ Built + self-test PASS | stages A–E, 1 kHz harness proof, stage B live at 66 Hz |
 | latbudget in-bottle XInput proxy | ✅ Verified in bottle | per-app registry override (CrossOver strips WINEDLLOVERRIDES); first real-game run pending |
+| latbudget --pollrate + live dashboards | ✅ Built + re-verified | raw IOHID, no caps: DS4 USB **250 Hz** verified; Xbox 125 Hz (dext cap) reported, pending re-run |
 
 ## What's real (measurements we actually captured)
 
@@ -41,6 +42,13 @@ invented — every figure comes from an actual run.**
 | Bluetooth | **67.6 Hz** | 14.8 ms | 7.98 ms |
 | USB-C | **109.9 Hz** | 9.1 ms | 5.94 ms |
 | USB-A | **108.7 Hz** | 9.2 ms | 4.13 ms |
+
+Raw-IOHID addendum (2026-07-15 night, `latbudget --pollrate`, no browser/SDL caps):
+DualShock 4 over USB = **250 Hz** (median 4.000 ms, jitter σ 0.02–0.04 ms) — the DS4
+presents as generic HID, so nothing caps it. The ~110 Hz USB figures above came
+through framework-mediated paths (SDL/browser) and are not the pad's ceiling.
+Reported but not yet reproduced: Xbox Series pad held to **125 Hz** on USB by
+`XboxGamepad.dext`.
 
 Trustworthy: sampler loop ran ~220,000 Hz (not loop-capped) and medians exceed the display
 frame time (not refresh-capped). Reproducible across separate runs.

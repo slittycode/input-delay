@@ -50,41 +50,53 @@ Permissions: Input Monitoring (stage B) and Screen Recording (stage D) for your 
 ## Polling-rate mode (`--pollrate`)
 
 Measures raw controller polling rate via `IOHIDManager` with kernel-timestamped
-report callbacks — no SDL, no GameController framework, no frontmost requirement.
+**value callbacks** — no SDL, no GameController framework, no frontmost requirement.
 This is the "raw native reference" column in `comparison-table.md`: mechanism 2
 (raw IOHID with Input Monitoring), uncapped and delivers in the background.
+
+Why value callbacks: the report-with-timestamp callback delivered nothing over
+USB on this machine (it worked over BT LE). `IOHIDManagerRegisterInputValueCallback`
+fires per element change, so values are deduplicated by their report timestamp —
+N element changes inside one HID report count as one report. Any input counts:
+sticks, buttons, triggers.
 
 ```bash
 ./.build/release/latbudget --pollrate                     # 15 s, JSON to stdout
 ./.build/release/latbudget --pollrate --out result.json   # write JSON to file
 ./.build/release/latbudget --pollrate --duration 30        # 30-second measurement
+./.build/release/latbudget --pollrate --gui               # live dashboard window
 ```
 
-Rotate the left stick in continuous circles during the measurement window.
-Ctrl-C also ends early and prints what has been collected.
+Provide any controller input during the measurement window (a DualShock 4
+streams continuously, so it needs none). Ctrl-C ends early and prints what has
+been collected. `--gui` opens a live window — rolling-window rate, per-device
+tracking — and prints the JSON when you close it.
 
-**Output** (pretty-printed JSON):
+**Output** (pretty-printed JSON — this is a real capture, DualShock 4 over USB,
+2026-07-15):
 
 ```json
 {
-  "controller": "Xbox Series X Controller",
-  "duration_s": 15,
-  "interval_ms": {
-    "avg": 4.012,
-    "jitter_std": 0.847,
-    "max": 8.314,
-    "median": 3.985,
-    "min": 2.747
+  "controller" : "Wireless Controller",
+  "device_count" : 1,
+  "duration_s" : 6.3,
+  "interval_ms" : {
+    "avg" : 4,
+    "jitter_std" : 0.021,
+    "max" : 4.11,
+    "median" : 4,
+    "min" : 3.917
   },
-  "intervals_captured": 3741,
-  "polling_rate_hz": 251.0,
-  "reports_captured": 3742,
-  "tool": "latbudget-hid-poll"
+  "intervals_captured" : 1568,
+  "polling_rate_hz" : 250,
+  "reports_captured" : 1569,
+  "tool" : "latbudget-hid-poll",
+  "transport" : "USB"
 }
 ```
 
-Intervals > 200 ms (stick was still) are excluded from stats. A 3-second
-liveness check exits with an error if no controller is detected.
+Intervals > 200 ms (no input) are excluded from stats. A 3-second liveness
+check exits with an error if no controller is detected.
 
 **No real-game budget has been captured yet** (this mode is distinct from the
 stage B/C/D budget pipeline). The output format may gain additional fields as

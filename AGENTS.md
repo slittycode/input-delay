@@ -19,6 +19,7 @@ There is no unified build. Each component compiles independently:
 | `latbudget/` | `swift build -c release` (in directory) | Swift SPM, macOS 14+ |
 | `gcprobe/` | `xcrun swiftc -O <file>.swift -o <binary>` | Standalone Swift files |
 | `latbudget/wine/` | `./build-proxy.sh` | mingw-w64 cross-compile, produces `xinput1_4.dll` |
+| `cross-over/poll_live.exe` | `./run-poll-live.sh` (auto-builds if stale) | mingw-w64, in-bottle polling dashboard |
 | `gamepadla-plus/` | `uv build` | Python 3.10+, hatchling |
 | `webtester/` | None — static HTML, serve with `python3 -m http.server 8777` | |
 
@@ -57,6 +58,7 @@ cd webtester && python3 -m http.server 8777
   - GameController.framework: **frontmost-only** (unless `shouldMonitorBackgroundEvents = true`)
   - Raw IOHIDManager: **gated by Input Monitoring TCC permission** (not focus-limited)
 - **`CGEventTimestamp` is ambiguous** — documented as nanoseconds but ships as raw mach ticks on some hardware. `InputTap` uses a heuristic.
+- **The HID report callback can be dead over USB** — `IOHIDDeviceRegisterInputReportWithTimeStampCallback` delivered nothing on USB here (fine over BT LE). Use `IOHIDManagerRegisterInputValueCallback` and dedupe values by their report timestamp (`PollrateMonitor` does this).
 
 ## CrossOver/Wine quirks
 
@@ -64,6 +66,7 @@ cd webtester && python3 -m http.server 8777
 - **`GetModuleFileName` returns the native file's path** even when Wine is using its builtin module — masquerading.
 - **First `XInputGetState` after start returns 1167** (`ERROR_DEVICE_NOT_CONNECTED`) — enumeration warmup, not a real disconnect.
 - **`dwPacketNumber` only advances while a bottle window is frontmost.**
+- **winebus can emit multiple `dwPacketNumber` increments per HID report** (~1.6× observed, reported 2026-07-15) — in-bottle rates must use avg (= packet-changes/sec), never the median of the bimodal interval distribution.
 - **CrossOver logs use `CX_DEBUGMSG`**, not `WINEDEBUG`.
 - **POSIX `sed` on macOS lacks `-P` (Perl regex)** — scripts must be compatible with both GNU and BSD `sed`.
 

@@ -437,3 +437,51 @@ Verified live in the "Elden Ring Test" bottle. Discoveries that cost hours:
 Stage B live (drift-only, BT LE): median 15.18 ms ≈ 66 Hz — matches the original
 Bluetooth polling measurement (67.6 Hz) from a completely independent path. 109 idle
 gaps correctly excluded.
+
+## 2026-07-15 (night) — pollrate rewrite: value callbacks, live dashboards, USB truth
+
+A separate session (DeepSeek) rewrote `--pollrate` and added live dashboards; this
+session reviewed, fixed, and re-verified the work.
+
+### The rewrite
+The report-with-timestamp callback (`IOHIDDeviceRegisterInputReportWithTimeStampCallback`)
+delivered **nothing over USB** on this machine — it had only ever been proven over BT LE
+(the caveat recorded in the morning entry). `--pollrate` now uses
+`IOHIDManagerRegisterInputValueCallback` instead: fires per element change, deduplicated
+by the value's report timestamp so one HID report counts once regardless of how many
+elements changed. All inputs count (sticks, buttons, triggers), not just the left stick.
+
+New surfaces:
+- `latbudget --pollrate --gui` — live AppKit dashboard (rolling-window rate, transport
+  label, per-device tracking, JSON printed on close).
+- `cross-over/poll_live.exe` (+ `run-poll-live.sh`) — matching in-bottle XInput
+  dashboard; writes JSON to `Z:\tmp\poll-live-result.json` on close.
+
+### Verified this session (re-run, real bytes)
+DualShock 4 ("Wireless Controller", 054c:09cc) over **USB**: **250 Hz** — median
+4.000 ms, jitter σ 0.021–0.035 ms across two runs (1569 reports/6.3 s, 2099/8.4 s).
+The DS4 presents as generic HID (no Apple dext claims it), so raw IOHID sees its full
+native rate. This also resolves the morning caveat: raw HID **does** deliver over USB
+with Input Monitoring granted — the earlier USB dead-ends were the report callback,
+not the transport.
+
+### Reported by the building session, NOT yet reproduced here
+1. Xbox Series pad on USB capped at **125 Hz / 8.0 ms** — attributed to
+   `XboxGamepad.dext`. No Xbox pad was connected during this session's re-run.
+2. winebus slices one HID report into **~1.6 dwPacketNumber increments**, inflating
+   naive in-bottle rates. (Consistent with the documented 172>109 bracket: packet
+   changes need not be 1:1 with HID reports.) The only in-bottle result JSON on disk
+   was a zero-data run — a real focused-window capture is still owed.
+
+### Fixes applied on review
+- `poll_live.c` wrote a **median-based** rate to JSON while displaying an avg-based
+  one; with the sliced (bimodal) interval distribution the median is meaningless.
+  JSON now uses avg == packet-changes/sec, the state-update rate the game sees.
+- `poll_live.c` wrote a zero-filled JSON when no controller was ever seen (found the
+  artifact on disk). It now writes nothing when there is no data.
+- `intervals_captured` was `reports - 1` (a guess); it is now the actual count of
+  non-excluded intervals, and the stdout JSON schema matches the `--out` schema.
+- `run-poll-live.sh` builds `poll_live.exe` if missing/stale (the .exe is gitignored).
+- `latbudget/README.md`'s example output was replaced with a real capture — the old
+  example showed an "Xbox Series X Controller" at 251 Hz, which matches no run on
+  record and contradicts the 125 Hz dext-cap report.
