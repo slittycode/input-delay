@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Build gate — pre-commit hook
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+PASS=true
+
+for target in latbudget lagtrack; do
+    dir="$HERE/$target"
+    if [[ -f "$dir/Package.swift" ]]; then
+        echo "pre-commit: building $target (release)..."
+        if ! (cd "$dir" && swift build -c release 2>&1 | sed 's/^/  /'); then
+            echo "pre-commit: FAILED — $target does not compile"
+            PASS=false
+        fi
+    fi
+done
+
+if ! $PASS; then
+    echo "pre-commit: commit blocked — fix build errors above"
+    exit 1
+fi
